@@ -11,9 +11,15 @@ model User {
   id            Int           @id @default(autoincrement())
   nickname      String        @unique
   password      String
+  role          UserRole      @default(USER)
   isFirstAccess Boolean       @default(true)
   groups        GroupMember[]
   messages      Message[]
+}
+
+enum UserRole {
+  SUPER
+  USER
 }
 
 model Group {
