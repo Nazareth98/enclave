@@ -35,7 +35,7 @@ model GroupMember {
   groupId Int
   role    GroupRole @default(MEMBER)
   user    User      @relation(fields: [userId], references: [id])
-  group   Group     @relation(fields: [groupId], references: [id])
+  group   Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@id([userId, groupId])
 }
@@ -53,7 +53,7 @@ model Message {
   createdAt DateTime      @default(now())
   files     MessageFile[]
   user      User          @relation(fields: [senderId], references: [id])
-  group     Group         @relation(fields: [groupId], references: [id])
+  group     Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
 
 model MessageFile {
