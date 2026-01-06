@@ -1,0 +1,59 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  nickname      String        @unique
+  password      String
+  isFirstAccess Boolean       @default(true)
+  groups        GroupMember[]
+  messages      Message[]
+}
+
+model Group {
+  id         Int           @id @default(autoincrement())
+  name       String
+  created_by Int
+  members    GroupMember[]
+  messages   Message[]
+}
+
+model GroupMember {
+  userId  Int
+  groupId Int
+  role    GroupRole @default(MEMBER)
+  user    User      @relation(fields: [userId], references: [id])
+  group   Group     @relation(fields: [groupId], references: [id])
+
+  @@id([userId, groupId])
+}
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+model Message {
+  id        Int           @id @default(autoincrement())
+  senderId  Int
+  groupId   Int
+  content   String
+  createdAt DateTime      @default(now())
+  files     MessageFile[]
+  user      User          @relation(fields: [senderId], references: [id])
+  group     Group         @relation(fields: [groupId], references: [id])
+}
+
+model MessageFile {
+  id        Int     @id @default(autoincrement())
+  messageId Int
+  type      String
+  fileUrl   String
+  message   Message @relation(fields: [messageId], references: [id])
+}
