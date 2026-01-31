@@ -11,7 +11,6 @@ export class GroupsService {
   ) {}
 
   async createGroup(name: string, ownerId: number, nicknames: string[] = []) {
-    // 1. Busca IDs dos nicknames (exceto o dono que já será ADMIN)
     const members = await this.prisma.user.findMany({
       where: { nickname: { in: nicknames }, NOT: { id: ownerId } },
       select: { id: true },
@@ -37,6 +36,8 @@ export class GroupsService {
         name: newGroup.name,
         role: member.role,
       });
+
+      this.chatGateway.addUserToGroupRoom(member.userId, newGroup.id);
     });
 
     return newGroup;
@@ -73,6 +74,8 @@ export class GroupsService {
         groupId,
         role: GroupRole.MEMBER,
       });
+
+      this.chatGateway.addUserToGroupRoom(user.id, groupId);
     });
 
     return { success: true, count: usersToAdd.length };

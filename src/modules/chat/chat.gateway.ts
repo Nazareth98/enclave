@@ -64,18 +64,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage("send_private_message")
   async handlePrivateMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { receiverNickname: string; encryptedContent: string },
+    @MessageBody() data: { receiverId: number; encryptedContent: string },
   ) {
     const user: JwtPayload = client.handshake.auth.user;
     const senderId = user.sub;
 
-    const message = await this.messagesService.savePrivateMessage(
-      senderId,
-      data.receiverNickname,
-      data.encryptedContent,
-    );
+    const message = await this.messagesService.savePrivateMessage(senderId, data.receiverId, data.encryptedContent);
 
-    const receiverId = message.receiverId || message.groupId;
+    const receiverId = message.receiverId;
 
     if (!receiverId) {
       return;
@@ -96,13 +92,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const user: JwtPayload = client.handshake.auth.user;
     const senderId = user.sub;
+    const roomName = `group_${data.groupId}`;
 
     try {
       const message = await this.messagesService.saveGroupMessage(senderId, data.groupId, data.encryptedContent);
-
-      this.server.to(`group_${data.groupId}`).emit("new_group_message", message);
+      this.server.to(roomName).emit("new_group_message", message);
     } catch (error) {
       client.emit("error", { message: error.message });
+    }
+  }
+
+  async addUserToGroupRoom(userId: number, groupId: number) {
+    const socketId = this.userSockets.get(userId);
+    if (socketId) {
+      const roomName = `group_${groupId}`;
+      await this.server.in(socketId).socketsJoin(roomName);
+      console.log(`✅ Socket do User ${userId} forçado a entrar na sala ${roomName}`);
+    } else {
+      console.log(`ℹ️ User ${userId} está offline, entrará na sala ao conectar.`);
     }
   }
 }

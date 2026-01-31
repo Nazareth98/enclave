@@ -11,9 +11,9 @@ export class MessagesService {
     });
   }
 
-  async savePrivateMessage(senderId: number, receiverNickname: string, content: string) {
+  async savePrivateMessage(senderId: number, receiverId: number, content: string) {
     const receiver = await this.prisma.user.findUnique({
-      where: { nickname: receiverNickname },
+      where: { id: receiverId },
     });
 
     if (!receiver) throw new Error("Usuário não encontrado");
