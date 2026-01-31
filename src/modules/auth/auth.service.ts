@@ -4,6 +4,7 @@ import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import { ChangePasswordDto } from "./dtos/change-password.dto";
+import { JwtPayload } from "src/@types/payload.types";
 
 @Injectable()
 export class AuthService {
@@ -42,7 +43,12 @@ export class AuthService {
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) throw new UnauthorizedException("Credenciais inválidas");
 
-    const payload = { sub: user.id, nickname: user.nickname, firstAccess: user.isFirstAccess, role: user.role };
+    const payload: JwtPayload = {
+      sub: user.id,
+      nickname: user.nickname,
+      firstAccess: user.isFirstAccess,
+      role: user.role,
+    };
 
     return {
       access_token: await this.jwtService.signAsync(payload),
@@ -63,7 +69,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException("Credenciais inválidas");
 
-    const payload = { sub: user.id, nickname: user.nickname, firstAccess: false };
+    const payload: JwtPayload = { sub: user.id, nickname: user.nickname, firstAccess: false, role: user.role };
 
     return {
       message: "Senha atualizada com sucesso!",

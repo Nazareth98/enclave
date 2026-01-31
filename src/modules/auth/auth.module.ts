@@ -7,13 +7,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
-  imports: [
-    PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || "MUDAR_PARA_PRODUCAO",
-      signOptions: { expiresIn: "1d" },
-    }),
-  ],
+  imports: [PassportModule],
   providers: [AuthService, JwtStrategy, PrismaService],
   controllers: [AuthController],
 })

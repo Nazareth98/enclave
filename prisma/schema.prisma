@@ -8,13 +8,15 @@ generator client {
 }
 
 model User {
-  id            Int           @id @default(autoincrement())
-  nickname      String        @unique
+  id            Int      @id @default(autoincrement())
+  nickname      String   @unique
   password      String
-  role          UserRole      @default(USER)
-  isFirstAccess Boolean       @default(true)
-  groups        GroupMember[]
-  messages      Message[]
+  role          UserRole @default(USER)
+  isFirstAccess Boolean  @default(true)
+
+  groups           GroupMember[]
+  sentMessages     Message[]     @relation("SentMessages")
+  receivedMessages Message[]     @relation("ReceivedMessages")
 }
 
 enum UserRole {
@@ -34,8 +36,9 @@ model GroupMember {
   userId  Int
   groupId Int
   role    GroupRole @default(MEMBER)
-  user    User      @relation(fields: [userId], references: [id])
-  group   Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@id([userId, groupId])
 }
@@ -46,14 +49,19 @@ enum GroupRole {
 }
 
 model Message {
-  id        Int           @id @default(autoincrement())
-  senderId  Int
-  groupId   Int
-  content   String
-  createdAt DateTime      @default(now())
-  files     MessageFile[]
-  user      User          @relation(fields: [senderId], references: [id])
-  group     Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  content    String
+  senderId   Int
+  groupId    Int?
+  receiverId Int?
+  createdAt  DateTime @default(now())
+
+  sender   User  @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  messageFiles MessageFile[]
 }
 
 model MessageFile {
@@ -61,5 +69,5 @@ model MessageFile {
   messageId Int
   type      String
   fileUrl   String
-  message   Message @relation(fields: [messageId], references: [id])
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 }
